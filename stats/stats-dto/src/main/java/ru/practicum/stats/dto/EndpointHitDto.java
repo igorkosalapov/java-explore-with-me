@@ -5,9 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
-
-public class EndpointHit {
-    private Long id;
+public class EndpointHitDto {
 
     @NotBlank
     private String app;

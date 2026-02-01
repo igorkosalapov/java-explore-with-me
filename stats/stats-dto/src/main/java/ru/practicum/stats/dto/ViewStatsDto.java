@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ViewStats {
+public class ViewStatsDto {
     @NotBlank
     private String app;
 
