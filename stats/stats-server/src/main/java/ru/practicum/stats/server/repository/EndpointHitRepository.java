@@ -38,7 +38,7 @@ public interface EndpointHitRepository extends JpaRepository<EndpointHitEntity, 
            select h.app as app, h.uri as uri, count(h.id) as hits
            from EndpointHitEntity h
            where h.hitTime between :start and :end
-             and h.uri in :uris
+             and h.uri in (:uris)
            group by h.app, h.uri
            order by hits desc
            """)
@@ -52,7 +52,7 @@ public interface EndpointHitRepository extends JpaRepository<EndpointHitEntity, 
            select h.app as app, h.uri as uri, count(distinct h.ip) as hits
            from EndpointHitEntity h
            where h.hitTime between :start and :end
-             and h.uri in :uris
+             and h.uri in (:uris)
            group by h.app, h.uri
            order by hits desc
            """)
