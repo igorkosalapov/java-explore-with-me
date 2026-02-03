@@ -1,14 +1,31 @@
 services:
+  stats-db:
+    image: postgres:16
+    container_name: stats-db
+    environment:
+      POSTGRES_DB: stats
+      POSTGRES_USER: stats
+      POSTGRES_PASSWORD: stats
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U stats -d stats" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   stats-server:
+    build:
+      context: .
+      dockerfile: stats/stats-server/Dockerfile
+    container_name: stats-server
     ports:
       - "9090:9090"
-
-  stats-db:
-    image: postgres:16.1
+    depends_on:
+      stats-db:
+        condition: service_healthy
 
   ewm-service:
-    ports:
-      - "8080:8080"
-
-  ewm-db:
-    image: postgres:16.1
+    image: eclipse-temurin:21-jre
+    container_name: ewm-service
+    command: [ "sh", "-c", "echo 'ewm-service stub' && sleep infinity" ]
