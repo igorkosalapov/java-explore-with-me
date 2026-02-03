@@ -6,7 +6,6 @@ import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
 import ru.practicum.stats.server.mapper.EndpointHitMapper;
 import ru.practicum.stats.server.repository.EndpointHitRepository;
-import ru.practicum.stats.server.repository.ViewStatsProjection;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,25 +36,14 @@ public class StatsServiceImpl implements StatsService {
 
         boolean hasUris = uris != null && !uris.isEmpty();
 
-        List<ViewStatsProjection> rows;
         if (!hasUris && !unique) {
-            rows = repository.findStats(startDt, endDt);
+            return repository.findStats(startDt, endDt);
         } else if (!hasUris) {
-            rows = repository.findUniqueStats(startDt, endDt);
+            return repository.findUniqueStats(startDt, endDt);
         } else if (!unique) {
-            rows = repository.findStatsByUris(startDt, endDt, uris);
+            return repository.findStatsByUris(startDt, endDt, uris);
         } else {
-            rows = repository.findUniqueStatsByUris(startDt, endDt, uris);
+            return repository.findUniqueStatsByUris(startDt, endDt, uris);
         }
-
-        return rows.stream()
-                .map(r -> {
-                    ViewStatsDto dto = new ViewStatsDto();
-                    dto.setApp(r.getApp());
-                    dto.setUri(r.getUri());
-                    dto.setHits(r.getHits());
-                    return dto;
-                })
-                .toList();
     }
 }
