@@ -1,16 +1,24 @@
 package ru.practicum.ewm.server.compilation.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.practicum.ewm.server.event.dto.EventShortDto;
 
-import java.util.List;
+import java.util.Set;
 
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CompilationDto {
-    List<EventShortDto> events;
-    Long id;
-    boolean pinned;
-    String title;
+
+    private Set<EventShortDto> events;
+
+    private Long id;
+
+    private Boolean pinned;
+
+    private String title;
 }

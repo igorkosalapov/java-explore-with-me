@@ -1,6 +1,8 @@
 package ru.practicum.ewm.server.compilation.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.server.compilation.dto.CompilationDto;
@@ -9,18 +11,20 @@ import ru.practicum.ewm.server.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.ewm.server.compilation.mapper.CompilationMapper;
 import ru.practicum.ewm.server.compilation.model.Compilation;
 import ru.practicum.ewm.server.compilation.repository.CompilationRepository;
+import ru.practicum.ewm.server.error.exception.ConflictException;
 import ru.practicum.ewm.server.error.exception.NotFoundException;
 import ru.practicum.ewm.server.event.model.Event;
 import ru.practicum.ewm.server.event.repository.EventRepository;
 import ru.practicum.ewm.server.util.OffsetBasedPageRequest;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CompilationServiceImpl implements CompilationService {
 
     private final CompilationRepository compilationRepository;
@@ -28,37 +32,38 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     @Transactional
-    public CompilationDto create(NewCompilationDto dto) {
-        List<Long> eventIds = dto.getEvents();
-        validateUniqueIds(eventIds);
+    public CompilationDto create(NewCompilationDto request) {
+        if (compilationRepository.existsByTitleIgnoreCase(request.getTitle())) {
+            throw new ConflictException("Compilation title must be unique");
+        }
 
-        Set<Event> events = fetchEventsOrThrow(eventIds);
-
-        Compilation compilation = Compilation.builder()
-                .title(dto.getTitle())
-                .pinned(Boolean.TRUE.equals(dto.getPinned()))
-                .events(events)
-                .build();
+        Compilation compilation = new Compilation();
+        compilation.setTitle(request.getTitle());
+        compilation.setPinned(Boolean.TRUE.equals(request.getPinned()));
+        compilation.setEvents(resolveEvents(request.getEvents()));
 
         return CompilationMapper.toDto(compilationRepository.save(compilation));
     }
 
     @Override
     @Transactional
-    public CompilationDto update(long compId, UpdateCompilationRequest dto) {
-        Compilation compilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + compId + " was not found"));
+    public CompilationDto update(Long compilationId, UpdateCompilationRequest request) {
+        Compilation compilation = getCompilationOrThrow(compilationId);
 
-        if (dto.getTitle() != null) {
-            compilation.setTitle(dto.getTitle());
+        if (request.getTitle() != null) {
+            boolean titleChanged = !request.getTitle().equalsIgnoreCase(compilation.getTitle());
+            if (titleChanged && compilationRepository.existsByTitleIgnoreCase(request.getTitle())) {
+                throw new ConflictException("Compilation title must be unique");
+            }
+            compilation.setTitle(request.getTitle());
         }
-        if (dto.getPinned() != null) {
-            compilation.setPinned(dto.getPinned());
+
+        if (request.getPinned() != null) {
+            compilation.setPinned(request.getPinned());
         }
-        if (dto.getEvents() != null) {
-            validateUniqueIds(dto.getEvents());
-            compilation.getEvents().clear();
-            compilation.getEvents().addAll(fetchEventsOrThrow(dto.getEvents()));
+
+        if (request.getEvents() != null) {
+            compilation.setEvents(resolveEvents(request.getEvents()));
         }
 
         return CompilationMapper.toDto(compilationRepository.save(compilation));
@@ -66,55 +71,53 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     @Transactional
-    public void delete(long compId) {
-        if (!compilationRepository.existsById(compId)) {
-            throw new NotFoundException("Compilation with id=" + compId + " was not found");
-        }
-        compilationRepository.deleteById(compId);
+    public void delete(Long compilationId) {
+        Compilation compilation = getCompilationOrThrow(compilationId);
+        compilationRepository.delete(compilation);
     }
 
     @Override
-    public List<CompilationDto> getCompilations(Boolean pinned, int from, int size) {
-        org.springframework.data.domain.Pageable page = new OffsetBasedPageRequest(from, size, null);
+    @Transactional(readOnly = true)
+    public List<CompilationDto> getAll(Boolean pinned, int from, int size) {
+        Pageable pageable = new OffsetBasedPageRequest(from, size);
 
-        var comps = (pinned == null)
-                ? compilationRepository.findAll(page)
-                : compilationRepository.findAllByPinned(pinned, page);
+        Page<Compilation> page;
+        if (pinned == null) {
+            page = compilationRepository.findAll(pageable);
+        } else {
+            page = compilationRepository.findAllByPinned(pinned, pageable);
+        }
 
-        return comps.stream().map(CompilationMapper::toDto).toList();
+        return page.stream()
+                .map(CompilationMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public CompilationDto getCompilation(long compId) {
-        Compilation compilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + compId + " was not found"));
-        return CompilationMapper.toDto(compilation);
+    @Transactional(readOnly = true)
+    public CompilationDto getById(Long compilationId) {
+        return CompilationMapper.toDto(getCompilationOrThrow(compilationId));
     }
 
-    private void validateUniqueIds(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return;
-        }
-        Set<Long> unique = new HashSet<>(ids);
-        if (unique.size() != ids.size()) {
-            throw new IllegalArgumentException("Duplicate ids are not allowed");
-        }
+    private Compilation getCompilationOrThrow(Long compilationId) {
+        return compilationRepository.findById(compilationId)
+                .orElseThrow(() -> new NotFoundException("Compilation with id=" + compilationId + " was not found"));
     }
 
-    private Set<Event> fetchEventsOrThrow(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return new HashSet<>();
+    private Set<Event> resolveEvents(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptySet();
         }
-        List<Event> events = eventRepository.findAllById(ids);
-        if (events.size() != ids.size()) {
-            Set<Long> found = events.stream().map(Event::getId).collect(java.util.stream.Collectors.toSet());
-            Long missing = ids.stream().filter(id -> !found.contains(id)).findFirst().orElse(null);
+
+        Set<Long> uniqueIds = new HashSet<>(eventIds);
+        List<Event> events = eventRepository.findAllById(uniqueIds);
+
+        if (events.size() != uniqueIds.size()) {
+            Set<Long> found = events.stream().map(Event::getId).collect(Collectors.toSet());
+            Long missing = uniqueIds.stream().filter(id -> !found.contains(id)).findFirst().orElse(null);
             throw new NotFoundException("Event with id=" + missing + " was not found");
         }
-        java.util.Map<Long, Event> byId = events.stream()
-                .collect(java.util.stream.Collectors.toMap(Event::getId, java.util.function.Function.identity()));
-        java.util.LinkedHashSet<Event> res = new java.util.LinkedHashSet<>();
-        ids.forEach(id -> res.add(byId.get(id)));
-        return res;
+
+        return new HashSet<>(events);
     }
 }

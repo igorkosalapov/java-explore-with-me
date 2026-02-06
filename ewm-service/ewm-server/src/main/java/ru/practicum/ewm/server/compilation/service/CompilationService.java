@@ -7,13 +7,14 @@ import ru.practicum.ewm.server.compilation.dto.UpdateCompilationRequest;
 import java.util.List;
 
 public interface CompilationService {
-    CompilationDto create(NewCompilationDto dto);
 
-    CompilationDto update(long compId, UpdateCompilationRequest dto);
+    CompilationDto create(NewCompilationDto request);
 
-    void delete(long compId);
+    CompilationDto update(Long compilationId, UpdateCompilationRequest request);
 
-    List<CompilationDto> getCompilations(Boolean pinned, int from, int size);
+    void delete(Long compilationId);
 
-    CompilationDto getCompilation(long compId);
+    List<CompilationDto> getAll(Boolean pinned, int from, int size);
+
+    CompilationDto getById(Long compilationId);
 }

@@ -6,20 +6,24 @@ import ru.practicum.ewm.server.compilation.model.Compilation;
 import ru.practicum.ewm.server.event.dto.EventShortDto;
 import ru.practicum.ewm.server.event.mapper.EventMapper;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class CompilationMapper {
 
     public static CompilationDto toDto(Compilation compilation) {
-        List<EventShortDto> events = compilation.getEvents() == null ? List.of() : compilation.getEvents().stream()
-                .map(e -> EventMapper.toShortDto(e, 0L, 0L))
-                .toList();
+        if (compilation == null) {
+            return null;
+        }
+        Set<EventShortDto> events = compilation.getEvents().stream()
+                .map(EventMapper::toShortDto)
+                .collect(Collectors.toSet());
 
         return CompilationDto.builder()
                 .id(compilation.getId())
                 .title(compilation.getTitle())
-                .pinned(compilation.isPinned())
+                .pinned(compilation.getPinned())
                 .events(events)
                 .build();
     }

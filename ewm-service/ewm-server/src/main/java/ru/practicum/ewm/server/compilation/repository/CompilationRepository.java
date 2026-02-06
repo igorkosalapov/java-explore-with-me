@@ -10,14 +10,16 @@ import java.util.Optional;
 
 public interface CompilationRepository extends JpaRepository<Compilation, Long> {
 
+    boolean existsByTitleIgnoreCase(String title);
+
+    @Override
     @EntityGraph(attributePaths = {"events", "events.category", "events.initiator"})
-    Page<Compilation> findAllByPinned(boolean pinned, Pageable pageable);
+    Optional<Compilation> findById(Long id);
 
     @Override
     @EntityGraph(attributePaths = {"events", "events.category", "events.initiator"})
     Page<Compilation> findAll(Pageable pageable);
 
-    @Override
     @EntityGraph(attributePaths = {"events", "events.category", "events.initiator"})
-    Optional<Compilation> findById(Long id);
+    Page<Compilation> findAllByPinned(boolean pinned, Pageable pageable);
 }
