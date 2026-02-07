@@ -28,9 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Реализация административного API для работы с событиями.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

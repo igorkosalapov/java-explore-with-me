@@ -5,12 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Данные для изменения события администратором.
- *
- * По спецификации на этом эндпоинте валидация данных не требуется,
- * поэтому здесь нет аннотаций Bean Validation (например @Size).
- */
 @Data
 @Builder
 @NoArgsConstructor

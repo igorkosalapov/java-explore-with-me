@@ -170,7 +170,6 @@ public class PublicEventServiceImpl implements PublicEventService {
         if (value == null || value.isBlank()) {
             return null;
         }
-        // DateTimeUtil.parse выбрасывает DateTimeParseException -> обработается ErrorHandler как 400
         return DateTimeUtil.parse(value);
     }
 }
