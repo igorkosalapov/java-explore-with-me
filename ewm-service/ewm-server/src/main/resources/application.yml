@@ -21,3 +21,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+stats:
+  server:
+    url: ${STATS_SERVER_URL:http://localhost:9090}
+  app: ${STATS_APP_NAME:ewm-main-service}

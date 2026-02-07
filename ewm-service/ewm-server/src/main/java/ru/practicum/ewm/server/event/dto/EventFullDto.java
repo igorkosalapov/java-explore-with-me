@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 import ru.practicum.ewm.server.category.dto.CategoryDto;
 import ru.practicum.ewm.server.user.dto.UserShortDto;
 
-/**
- * Полная информация о событии.
- */
 @Data
 @Builder
 @NoArgsConstructor

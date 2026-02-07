@@ -9,9 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO для создания события.
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -29,9 +26,6 @@ public class NewEventDto {
     @Size(min = 20, max = 7000)
     private String description;
 
-    /**
-     * Дата и время в формате "yyyy-MM-dd HH:mm:ss".
-     */
     @NotBlank
     private String eventDate;
 
@@ -39,10 +33,13 @@ public class NewEventDto {
     @Valid
     private Location location;
 
+    @Builder.Default
     private Boolean paid = false;
 
+    @Builder.Default
     private Integer participantLimit = 0;
 
+    @Builder.Default
     private Boolean requestModeration = true;
 
     @NotBlank
