@@ -1,10 +1,14 @@
 package ru.practicum.ewm.server.event.repository;
 
-import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 import ru.practicum.ewm.server.event.model.Event;
 import ru.practicum.ewm.server.request.model.ParticipationRequest;
 import ru.practicum.ewm.server.request.model.RequestStatus;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -66,6 +70,20 @@ public final class EventSpecifications {
             return Specification.where(null);
         }
         return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("eventDate"), end);
+    }
+
+    public static Specification<Event> initiatorIn(List<Long> initiatorIds) {
+        if (initiatorIds == null || initiatorIds.isEmpty()) {
+            return Specification.where(null);
+        }
+        return (root, query, cb) -> root.get("initiator").get("id").in(initiatorIds);
+    }
+
+    public static Specification<Event> stateIn(List<Event.State> states) {
+        if (states == null || states.isEmpty()) {
+            return Specification.where(null);
+        }
+        return (root, query, cb) -> root.get("state").in(states);
     }
 
     public static Specification<Event> onlyAvailable() {
