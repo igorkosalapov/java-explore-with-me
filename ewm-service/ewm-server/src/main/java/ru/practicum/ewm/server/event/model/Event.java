@@ -30,11 +30,31 @@ public class Event {
     @Column(nullable = false, length = 2000)
     private String annotation;
 
+    @Column(nullable = false, length = 7000)
+    private String description;
+
     @Column(nullable = false, length = 120)
     private String title;
 
     @Column(nullable = false)
     private Boolean paid = false;
+
+    @Column(nullable = false)
+    private LocalDateTime createdOn;
+
+    private LocalDateTime publishedOn;
+
+    @Column(nullable = false)
+    private Integer participantLimit = 0;
+
+    @Column(nullable = false)
+    private Boolean requestModeration = true;
+
+    @Column(nullable = false)
+    private Float lat;
+
+    @Column(nullable = false)
+    private Float lon;
 
     @Column(nullable = false)
     private LocalDateTime eventDate;

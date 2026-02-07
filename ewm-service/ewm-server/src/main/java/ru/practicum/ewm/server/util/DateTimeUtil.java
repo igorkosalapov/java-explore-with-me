@@ -16,4 +16,11 @@ public class DateTimeUtil {
         }
         return dateTime.format(DATE_TIME_FORMATTER);
     }
+
+    public static LocalDateTime parse(String dateTime) {
+        if (dateTime == null || dateTime.isBlank()) {
+            return null;
+        }
+        return LocalDateTime.parse(dateTime, DATE_TIME_FORMATTER);
+    }
 }
