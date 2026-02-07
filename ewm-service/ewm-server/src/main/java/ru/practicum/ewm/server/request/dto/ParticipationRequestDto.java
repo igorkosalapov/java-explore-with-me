@@ -5,11 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO заявки на участие в событии.
- *
- * Соответствует схеме ParticipationRequestDto из спецификации основного сервиса.
- */
 @Data
 @Builder
 @NoArgsConstructor

@@ -13,6 +13,10 @@ import ru.practicum.ewm.server.util.DateTimeUtil;
 public class EventMapper {
 
     public static EventShortDto toShortDto(Event event) {
+        return toShortDto(event, 0L, 0L);
+    }
+
+    public static EventShortDto toShortDto(Event event, long confirmedRequests, long views) {
         if (event == null) {
             return null;
         }
@@ -24,12 +28,16 @@ public class EventMapper {
                 .initiator(UserMapper.toShortDto(event.getInitiator()))
                 .paid(event.getPaid())
                 .eventDate(DateTimeUtil.format(event.getEventDate()))
-                .confirmedRequests(0L)
-                .views(0L)
+                .confirmedRequests(confirmedRequests)
+                .views(views)
                 .build();
     }
 
     public static EventFullDto toFullDto(Event event) {
+        return toFullDto(event, 0L, 0L);
+    }
+
+    public static EventFullDto toFullDto(Event event, long confirmedRequests, long views) {
         if (event == null) {
             return null;
         }
@@ -48,8 +56,8 @@ public class EventMapper {
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState().name())
                 .location(Location.builder().lat(event.getLat()).lon(event.getLon()).build())
-                .confirmedRequests(0L)
-                .views(0L)
+                .confirmedRequests(confirmedRequests)
+                .views(views)
                 .build();
     }
 }

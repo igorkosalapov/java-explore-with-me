@@ -15,6 +15,7 @@ import ru.practicum.ewm.server.error.exception.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestControllerAdvice
@@ -27,6 +28,7 @@ public class ErrorHandler {
             ConstraintViolationException.class,
             MissingServletRequestParameterException.class,
             HttpMessageNotReadableException.class,
+            DateTimeParseException.class,
             IllegalArgumentException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)

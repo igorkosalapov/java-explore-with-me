@@ -21,6 +21,10 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
 
     List<ParticipationRequest> findAllByEventId(Long eventId, Sort sort);
 
+    List<ParticipationRequest> findAllByEventIdAndStatus(Long eventId, RequestStatus status, Sort sort);
+
+    List<ParticipationRequest> findAllByIdInAndEventId(Collection<Long> ids, Long eventId);
+
     long countByEventIdAndStatus(Long eventId, RequestStatus status);
 
     @Query("select r.event.id as eventId, count(r.id) as requestsCount " +
@@ -28,5 +32,5 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
             "where r.event.id in :eventIds and r.status = :status " +
             "group by r.event.id")
     List<EventRequestsCount> countRequestsByEventIdsAndStatus(@Param("eventIds") Collection<Long> eventIds,
-                                                              @Param("status") RequestStatus status);
+                                                             @Param("status") RequestStatus status);
 }
