@@ -128,7 +128,7 @@ public class AdminEventServiceImpl implements AdminEventService {
         LocalDateTime now = LocalDateTime.now();
 
         switch (action) {
-            case PUBLISH_EVENT -> {
+            case PUBLISH_EVENT:
                 if (event.getState() != Event.State.PENDING) {
                     throw new ConditionNotMetException(
                             "Cannot publish the event because it's not in the right state: " + event.getState());
@@ -138,14 +138,18 @@ public class AdminEventServiceImpl implements AdminEventService {
                 }
                 event.setState(Event.State.PUBLISHED);
                 event.setPublishedOn(now);
-            }
-            case REJECT_EVENT -> {
+                break;
+
+            case REJECT_EVENT:
                 if (event.getState() == Event.State.PUBLISHED) {
                     throw new ConditionNotMetException(
                             "Cannot reject the event because it's already published");
                 }
                 event.setState(Event.State.CANCELED);
-            }
+                break;
+
+            default:
+                throw new IllegalArgumentException("Unknown action: " + action);
         }
     }
 
