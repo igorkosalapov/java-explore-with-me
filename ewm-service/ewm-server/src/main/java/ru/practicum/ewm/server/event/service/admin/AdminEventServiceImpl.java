@@ -105,7 +105,11 @@ public class AdminEventServiceImpl implements AdminEventService {
             event.setLon(request.getLocation().getLon());
         }
         if (request.getEventDate() != null) {
-            event.setEventDate(DateTimeUtil.parse(request.getEventDate()));
+            LocalDateTime newEventDate = DateTimeUtil.parse(request.getEventDate());
+            if (newEventDate != null && newEventDate.isBefore(LocalDateTime.now().plusHours(1))) {
+                throw new ConditionNotMetException("Event date must be at least 1 hour in the future");
+            }
+            event.setEventDate(newEventDate);
         }
 
         if (request.getStateAction() != null) {

@@ -75,7 +75,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         request.setRequester(requester);
 
         boolean moderation = event.getRequestModeration() != null ? event.getRequestModeration() : true;
-        if (!moderation) {
+        if (!moderation || limit == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
         } else {
             request.setStatus(RequestStatus.PENDING);
