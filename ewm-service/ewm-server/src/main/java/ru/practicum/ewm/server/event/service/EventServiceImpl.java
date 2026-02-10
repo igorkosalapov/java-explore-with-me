@@ -122,10 +122,21 @@ public class EventServiceImpl implements EventService {
         }
         if (dto.getStateAction() != null) {
             switch (dto.getStateAction()) {
-                case SEND_TO_REVIEW -> event.setState(Event.State.PENDING);
-                case CANCEL_REVIEW -> event.setState(Event.State.CANCELED);
+                case SEND_TO_REVIEW:
+                    event.setState(Event.State.PENDING);
+                    break;
+
+                case CANCEL_REVIEW:
+                    event.setState(Event.State.CANCELED);
+                    break;
+
+                default:
+                    throw new IllegalArgumentException(
+                            "Unknown state action: " + dto.getStateAction()
+                    );
             }
         }
+
 
         Event saved = eventRepository.save(event);
         return EventMapper.toFullDto(saved);
