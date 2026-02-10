@@ -52,7 +52,7 @@ public class EventServiceImpl implements EventService {
         LocalDateTime eventDate = DateTimeUtil.parse(dto.getEventDate());
         validateEventDateAtLeastTwoHoursFromNow(eventDate);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().withNano(0);
 
         Event event = new Event();
         event.setTitle(dto.getTitle());

@@ -70,7 +70,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         }
 
         ParticipationRequest request = new ParticipationRequest();
-        request.setCreated(LocalDateTime.now());
+        request.setCreated(LocalDateTime.now().withNano(0));
         request.setEvent(event);
         request.setRequester(requester);
 
