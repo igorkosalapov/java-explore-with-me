@@ -25,18 +25,19 @@ public class StatsFacade {
     }
 
     public void saveHit(String uri, String ip, LocalDateTime timestamp) {
-        EndpointHitDto dto = new EndpointHitDto();
-        dto.setApp(appName);
-        dto.setUri(uri);
-        dto.setIp(ip);
-        dto.setTimestamp(DateTimeUtil.format(timestamp));
+        EndpointHitDto dto = EndpointHitDto.builder()
+                .app(appName)
+                .uri(uri)
+                .ip(ip)
+                .timestamp(DateTimeUtil.format(timestamp))
+                .build();
         statsClient.hit(dto);
     }
 
     public Map<String, Long> getViews(LocalDateTime start,
-                                     LocalDateTime end,
-                                     List<String> uris,
-                                     boolean unique) {
+                                      LocalDateTime end,
+                                      List<String> uris,
+                                      boolean unique) {
         List<ViewStatsDto> stats = statsClient.getStats(
                 DateTimeUtil.format(start),
                 DateTimeUtil.format(end),

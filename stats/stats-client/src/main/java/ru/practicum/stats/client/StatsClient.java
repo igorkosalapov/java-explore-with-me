@@ -7,8 +7,6 @@ import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
 
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,14 +39,10 @@ public class StatsClient {
     }
 
     public List<ViewStatsDto> getStats(String start, String end, List<String> uris, boolean unique) {
-
-        String encodedStart = URLEncoder.encode(start, StandardCharsets.UTF_8);
-        String encodedEnd = URLEncoder.encode(end, StandardCharsets.UTF_8);
-
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromHttpUrl(baseUrl + "/stats")
-                .queryParam("start", encodedStart)
-                .queryParam("end", encodedEnd)
+                .queryParam("start", start)
+                .queryParam("end", end)
                 .queryParam("unique", unique);
 
         if (uris != null) {
@@ -57,7 +51,7 @@ public class StatsClient {
             }
         }
 
-        URI uri = builder.build(true).toUri();
+        URI uri = builder.build().encode().toUri();
 
         ResponseEntity<ViewStatsDto[]> response = restTemplate.getForEntity(uri, ViewStatsDto[].class);
 
