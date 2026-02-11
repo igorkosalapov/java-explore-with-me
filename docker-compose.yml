@@ -40,11 +40,11 @@ services:
       timeout: 5s
       retries: 10
 
-  ewm-server:
+  ewm-service:
     build:
       context: .
       dockerfile: ewm-service/ewm-server/Dockerfile
-    container_name: ewm-server
+    container_name: ewm-service
     depends_on:
       ewm-db:
         condition: service_healthy
