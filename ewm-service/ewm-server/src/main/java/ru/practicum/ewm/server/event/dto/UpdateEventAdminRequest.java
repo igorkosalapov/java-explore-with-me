@@ -1,5 +1,6 @@
 package ru.practicum.ewm.server.event.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class UpdateEventAdminRequest {
 
     private Boolean paid;
 
+    @NotNull
     private Integer participantLimit;
 
     private Boolean requestModeration;
