@@ -147,7 +147,7 @@ public class EventServiceImpl implements EventService {
             throw new IllegalArgumentException("eventDate must not be null");
         }
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ConditionNotMetException("Event date must be at least 2 hours in the future");
+            throw new IllegalArgumentException("Event date must be at least 2 hours in the future");
         }
     }
 

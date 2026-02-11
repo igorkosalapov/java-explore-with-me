@@ -107,7 +107,7 @@ public class AdminEventServiceImpl implements AdminEventService {
         if (request.getEventDate() != null) {
             LocalDateTime newEventDate = DateTimeUtil.parse(request.getEventDate());
             if (newEventDate != null && newEventDate.isBefore(LocalDateTime.now().plusHours(1))) {
-                throw new ConditionNotMetException("Event date must be at least 1 hour in the future");
+                throw new IllegalArgumentException("Event date must be at least 1 hour in the future");
             }
             event.setEventDate(newEventDate);
         }
@@ -223,7 +223,7 @@ public class AdminEventServiceImpl implements AdminEventService {
         if (uris == null || uris.isEmpty()) {
             return Map.of();
         }
-        return statsFacade.getViews(MIN_STATS_DATE, LocalDateTime.now(), uris, false);
+        return statsFacade.getViews(MIN_STATS_DATE, LocalDateTime.now(), uris, true);
     }
 
     private static String buildEventUri(Long eventId) {

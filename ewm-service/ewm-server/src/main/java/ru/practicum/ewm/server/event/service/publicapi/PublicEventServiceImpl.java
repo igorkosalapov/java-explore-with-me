@@ -159,7 +159,7 @@ public class PublicEventServiceImpl implements PublicEventService {
         if (uris == null || uris.isEmpty()) {
             return Map.of();
         }
-        return statsFacade.getViews(MIN_STATS_DATE, LocalDateTime.now(), uris, false);
+        return statsFacade.getViews(MIN_STATS_DATE, LocalDateTime.now(), uris, true);
     }
 
     private static String buildEventUri(Long eventId) {

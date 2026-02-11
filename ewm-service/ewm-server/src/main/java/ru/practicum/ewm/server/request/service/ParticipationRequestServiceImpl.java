@@ -150,7 +150,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         for (ParticipationRequest r : requests) {
             if (r.getStatus() != RequestStatus.PENDING) {
-                throw new IllegalArgumentException("Request must have status PENDING");
+                throw new ConditionNotMetException("Request must have status PENDING");
             }
         }
 
