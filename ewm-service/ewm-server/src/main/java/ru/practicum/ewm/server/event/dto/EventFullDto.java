@@ -1,5 +1,6 @@
 package ru.practicum.ewm.server.event.dto;
 
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +34,7 @@ public class EventFullDto {
 
     private Boolean paid;
 
+    @PositiveOrZero
     private Integer participantLimit;
 
     private String publishedOn;
