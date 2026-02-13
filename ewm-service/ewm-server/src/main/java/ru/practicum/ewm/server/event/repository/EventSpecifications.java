@@ -2,6 +2,7 @@ package ru.practicum.ewm.server.event.repository;
 
 import org.springframework.data.jpa.domain.Specification;
 import ru.practicum.ewm.server.event.model.Event;
+import ru.practicum.ewm.server.event.model.State;
 import ru.practicum.ewm.server.request.model.ParticipationRequest;
 import ru.practicum.ewm.server.request.model.RequestStatus;
 
@@ -19,7 +20,7 @@ public final class EventSpecifications {
     }
 
     public static Specification<Event> isPublished() {
-        return (root, query, cb) -> cb.equal(root.get("state"), Event.State.PUBLISHED);
+        return (root, query, cb) -> cb.equal(root.get("state"), State.PUBLISHED);
     }
 
     public static Specification<Event> fetchCategoryAndInitiator() {
@@ -79,7 +80,7 @@ public final class EventSpecifications {
         return (root, query, cb) -> root.get("initiator").get("id").in(initiatorIds);
     }
 
-    public static Specification<Event> stateIn(List<Event.State> states) {
+    public static Specification<Event> stateIn(List<State> states) {
         if (states == null || states.isEmpty()) {
             return Specification.where(null);
         }

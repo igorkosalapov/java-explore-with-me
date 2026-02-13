@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.ewm.server.category.dto.CategoryDto;
+import ru.practicum.ewm.server.event.model.Location;
 import ru.practicum.ewm.server.user.dto.UserShortDto;
 
 @Data

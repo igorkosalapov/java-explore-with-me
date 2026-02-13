@@ -11,20 +11,17 @@ import ru.practicum.ewm.server.event.dto.EventFullDto;
 import ru.practicum.ewm.server.event.dto.EventShortDto;
 import ru.practicum.ewm.server.event.mapper.EventMapper;
 import ru.practicum.ewm.server.event.model.Event;
+import ru.practicum.ewm.server.event.model.State;
 import ru.practicum.ewm.server.event.repository.EventRepository;
 import ru.practicum.ewm.server.event.repository.EventSpecifications;
-import ru.practicum.ewm.server.request.model.RequestStatus;
-import ru.practicum.ewm.server.request.repository.EventRequestsCount;
-import ru.practicum.ewm.server.request.repository.ParticipationRequestRepository;
+import ru.practicum.ewm.server.event.service.EventMetricsService;
 import ru.practicum.ewm.server.stats.StatsFacade;
 import ru.practicum.ewm.server.util.DateTimeUtil;
 import ru.practicum.ewm.server.util.OffsetBasedPageRequest;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,10 +31,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class PublicEventServiceImpl implements PublicEventService {
 
-    private static final LocalDateTime MIN_STATS_DATE = LocalDateTime.of(2020, 1, 1, 0, 0);
+    private final EventMetricsService metricsService;
 
     private final EventRepository eventRepository;
-    private final ParticipationRequestRepository requestRepository;
     private final StatsFacade statsFacade;
 
     @Override
@@ -93,11 +89,13 @@ public class PublicEventServiceImpl implements PublicEventService {
         statsFacade.saveHit(uri, ip, LocalDateTime.now());
 
         Event event = eventRepository.findById(eventId)
-                .filter(e -> e.getState() == Event.State.PUBLISHED)
+                .filter(e -> e.getState() == State.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        long confirmed = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        long views = getViewsForUris(List.of(uri)).getOrDefault(uri, 0L);
+        long confirmed = metricsService.confirmedByEventIds(List.of(eventId)).getOrDefault(eventId, 0L);
+
+        String eventUri = EventMetricsService.eventUri(eventId);
+        long views = metricsService.viewsByUris(List.of(eventUri)).getOrDefault(eventUri, 0L);
 
         return EventMapper.toFullDto(event, confirmed, views);
     }
@@ -118,52 +116,17 @@ public class PublicEventServiceImpl implements PublicEventService {
         }
 
         List<Long> ids = events.stream().map(Event::getId).toList();
-        Map<Long, Long> confirmedMap = getConfirmedRequestsByEvent(ids);
-        Map<String, Long> viewsMap = getViewsForEventIds(ids);
+        Map<Long, Long> confirmedMap = metricsService.confirmedByEventIds(ids);
+        Map<String, Long> viewsMap = metricsService.viewsByEventIds(ids);
 
         return events.stream()
                 .map(e -> {
                     long confirmed = confirmedMap.getOrDefault(e.getId(), 0L);
-                    String eventUri = buildEventUri(e.getId());
+                    String eventUri = EventMetricsService.eventUri(e.getId());
                     long views = viewsMap.getOrDefault(eventUri, 0L);
                     return EventMapper.toShortDto(e, confirmed, views);
                 })
                 .collect(Collectors.toList());
-    }
-
-    private Map<Long, Long> getConfirmedRequestsByEvent(Collection<Long> eventIds) {
-        if (eventIds == null || eventIds.isEmpty()) {
-            return Map.of();
-        }
-
-        List<EventRequestsCount> counts = requestRepository
-                .countRequestsByEventIdsAndStatus(eventIds, RequestStatus.CONFIRMED);
-
-        Map<Long, Long> result = new HashMap<>();
-        for (EventRequestsCount c : counts) {
-            result.put(c.getEventId(), c.getRequestsCount());
-        }
-        return result;
-    }
-
-    private Map<String, Long> getViewsForEventIds(Collection<Long> eventIds) {
-        if (eventIds == null || eventIds.isEmpty()) {
-            return Map.of();
-        }
-
-        List<String> uris = eventIds.stream().map(PublicEventServiceImpl::buildEventUri).toList();
-        return getViewsForUris(uris);
-    }
-
-    private Map<String, Long> getViewsForUris(List<String> uris) {
-        if (uris == null || uris.isEmpty()) {
-            return Map.of();
-        }
-        return statsFacade.getViews(MIN_STATS_DATE, LocalDateTime.now(), uris, true);
-    }
-
-    private static String buildEventUri(Long eventId) {
-        return "/events/" + eventId;
     }
 
     private static LocalDateTime parseDateSafely(String value) {

@@ -3,7 +3,6 @@ package ru.practicum.ewm.server.event.mapper;
 import lombok.experimental.UtilityClass;
 import ru.practicum.ewm.server.category.mapper.CategoryMapper;
 import ru.practicum.ewm.server.event.dto.EventFullDto;
-import ru.practicum.ewm.server.event.dto.Location;
 import ru.practicum.ewm.server.event.dto.EventShortDto;
 import ru.practicum.ewm.server.event.model.Event;
 import ru.practicum.ewm.server.user.mapper.UserMapper;
@@ -55,7 +54,7 @@ public class EventMapper {
                 .participantLimit(event.getParticipantLimit())
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState().name())
-                .location(Location.builder().lat(event.getLat()).lon(event.getLon()).build())
+                .location(event.getLocation())
                 .confirmedRequests(confirmedRequests)
                 .views(views)
                 .build();

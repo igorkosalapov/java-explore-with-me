@@ -13,18 +13,14 @@ import ru.practicum.ewm.server.event.dto.EventFullDto;
 import ru.practicum.ewm.server.event.dto.UpdateEventAdminRequest;
 import ru.practicum.ewm.server.event.mapper.EventMapper;
 import ru.practicum.ewm.server.event.model.Event;
+import ru.practicum.ewm.server.event.model.State;
 import ru.practicum.ewm.server.event.repository.EventRepository;
 import ru.practicum.ewm.server.event.repository.EventSpecifications;
-import ru.practicum.ewm.server.request.model.RequestStatus;
-import ru.practicum.ewm.server.request.repository.EventRequestsCount;
-import ru.practicum.ewm.server.request.repository.ParticipationRequestRepository;
-import ru.practicum.ewm.server.stats.StatsFacade;
+import ru.practicum.ewm.server.event.service.EventMetricsService;
 import ru.practicum.ewm.server.util.DateTimeUtil;
 import ru.practicum.ewm.server.util.OffsetBasedPageRequest;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,12 +29,9 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class AdminEventServiceImpl implements AdminEventService {
 
-    private static final LocalDateTime MIN_STATS_DATE = LocalDateTime.of(2020, 1, 1, 0, 0);
-
+    private final EventMetricsService metricsService;
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
-    private final ParticipationRequestRepository requestRepository;
-    private final StatsFacade statsFacade;
 
     @Override
     public List<EventFullDto> getEvents(List<Long> users,
@@ -55,7 +48,7 @@ public class AdminEventServiceImpl implements AdminEventService {
             throw new IllegalArgumentException("rangeStart must be before rangeEnd");
         }
 
-        List<Event.State> stateEnums = parseStates(states);
+        List<State> stateEnums = State.from(states);
 
         Specification<Event> spec = Specification.where(EventSpecifications.fetchCategoryAndInitiator())
                 .and(EventSpecifications.initiatorIn(users))
@@ -101,8 +94,7 @@ public class AdminEventServiceImpl implements AdminEventService {
             if (request.getLocation().getLat() == null || request.getLocation().getLon() == null) {
                 throw new IllegalArgumentException("Location must contain lat and lon");
             }
-            event.setLat(request.getLocation().getLat());
-            event.setLon(request.getLocation().getLon());
+            event.setLocation(request.getLocation());
         }
         if (request.getEventDate() != null) {
             LocalDateTime newEventDate = DateTimeUtil.parse(request.getEventDate());
@@ -118,8 +110,9 @@ public class AdminEventServiceImpl implements AdminEventService {
 
         Event saved = eventRepository.save(event);
 
-        long confirmed = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        long views = getViewsForUris(List.of(buildEventUri(eventId))).getOrDefault(buildEventUri(eventId), 0L);
+        long confirmed = metricsService.confirmedByEventIds(List.of(eventId)).getOrDefault(eventId, 0L);
+        String uri = EventMetricsService.eventUri(eventId);
+        long views = metricsService.viewsByUris(List.of(uri)).getOrDefault(uri, 0L);
 
         return EventMapper.toFullDto(saved, confirmed, views);
     }
@@ -129,23 +122,23 @@ public class AdminEventServiceImpl implements AdminEventService {
 
         switch (action) {
             case PUBLISH_EVENT:
-                if (event.getState() != Event.State.PENDING) {
+                if (event.getState() != State.PENDING) {
                     throw new ConditionNotMetException(
                             "Cannot publish the event because it's not in the right state: " + event.getState());
                 }
                 if (event.getEventDate() == null || event.getEventDate().isBefore(now.plusHours(1))) {
                     throw new ConditionNotMetException("Event date must be at least 1 hour in the future");
                 }
-                event.setState(Event.State.PUBLISHED);
+                event.setState(State.PUBLISHED);
                 event.setPublishedOn(now);
                 break;
 
             case REJECT_EVENT:
-                if (event.getState() == Event.State.PUBLISHED) {
+                if (event.getState() == State.PUBLISHED) {
                     throw new ConditionNotMetException(
                             "Cannot reject the event because it's already published");
                 }
-                event.setState(Event.State.CANCELED);
+                event.setState(State.CANCELED);
                 break;
 
             default:
@@ -156,17 +149,6 @@ public class AdminEventServiceImpl implements AdminEventService {
     private Category getCategoryOrThrow(long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
-    }
-
-    private List<Event.State> parseStates(List<String> states) {
-        if (states == null || states.isEmpty()) {
-            return List.of();
-        }
-        return states.stream()
-                .filter(s -> s != null && !s.isBlank())
-                .map(String::trim)
-                .map(Event.State::valueOf)
-                .toList();
     }
 
     private static LocalDateTime parseDateSafely(String value) {
@@ -182,51 +164,18 @@ public class AdminEventServiceImpl implements AdminEventService {
         }
 
         List<Long> ids = events.stream().map(Event::getId).toList();
-        Map<Long, Long> confirmedMap = getConfirmedRequestsByEvent(ids);
-        Map<String, Long> viewsMap = getViewsForEventIds(ids);
+        Map<Long, Long> confirmedMap = metricsService.confirmedByEventIds(ids);
+        Map<String, Long> viewsMap = metricsService.viewsByEventIds(ids);
 
         return events.stream()
                 .map(e -> {
                     long confirmed = confirmedMap.getOrDefault(e.getId(), 0L);
-                    String uri = buildEventUri(e.getId());
+                    String uri = EventMetricsService.eventUri(e.getId());
                     long views = viewsMap.getOrDefault(uri, 0L);
+
                     return EventMapper.toFullDto(e, confirmed, views);
                 })
                 .toList();
     }
-
-    private Map<Long, Long> getConfirmedRequestsByEvent(Collection<Long> eventIds) {
-        if (eventIds == null || eventIds.isEmpty()) {
-            return Map.of();
-        }
-
-        List<EventRequestsCount> counts = requestRepository
-                .countRequestsByEventIdsAndStatus(eventIds, RequestStatus.CONFIRMED);
-
-        Map<Long, Long> result = new HashMap<>();
-        for (EventRequestsCount c : counts) {
-            result.put(c.getEventId(), c.getRequestsCount());
-        }
-        return result;
-    }
-
-    private Map<String, Long> getViewsForEventIds(Collection<Long> eventIds) {
-        if (eventIds == null || eventIds.isEmpty()) {
-            return Map.of();
-        }
-
-        List<String> uris = eventIds.stream().map(AdminEventServiceImpl::buildEventUri).toList();
-        return getViewsForUris(uris);
-    }
-
-    private Map<String, Long> getViewsForUris(List<String> uris) {
-        if (uris == null || uris.isEmpty()) {
-            return Map.of();
-        }
-        return statsFacade.getViews(MIN_STATS_DATE, LocalDateTime.now(), uris, true);
-    }
-
-    private static String buildEventUri(Long eventId) {
-        return "/events/" + eventId;
-    }
 }
+

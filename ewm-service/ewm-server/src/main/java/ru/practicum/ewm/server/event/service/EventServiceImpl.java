@@ -14,6 +14,7 @@ import ru.practicum.ewm.server.event.dto.NewEventDto;
 import ru.practicum.ewm.server.event.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.server.event.mapper.EventMapper;
 import ru.practicum.ewm.server.event.model.Event;
+import ru.practicum.ewm.server.event.model.State;
 import ru.practicum.ewm.server.event.repository.EventRepository;
 import ru.practicum.ewm.server.user.model.User;
 import ru.practicum.ewm.server.user.repository.UserRepository;
@@ -65,9 +66,8 @@ public class EventServiceImpl implements EventService {
         event.setPaid(dto.getPaid() != null ? dto.getPaid() : false);
         event.setParticipantLimit(dto.getParticipantLimit() != null ? dto.getParticipantLimit() : 0);
         event.setRequestModeration(dto.getRequestModeration() != null ? dto.getRequestModeration() : true);
-        event.setLat(dto.getLocation().getLat());
-        event.setLon(dto.getLocation().getLon());
-        event.setState(Event.State.PENDING);
+        event.setLocation(dto.getLocation());
+        event.setState(State.PENDING);
 
         Event saved = eventRepository.save(event);
         return EventMapper.toFullDto(saved);
@@ -86,7 +86,7 @@ public class EventServiceImpl implements EventService {
         getUserOrThrow(userId);
         Event event = getUserEventOrThrow(userId, eventId);
 
-        if (event.getState() == Event.State.PUBLISHED) {
+        if (event.getState() == State.PUBLISHED) {
             throw new ConditionNotMetException("Only pending or canceled events can be changed");
         }
 
@@ -112,8 +112,7 @@ public class EventServiceImpl implements EventService {
             event.setRequestModeration(dto.getRequestModeration());
         }
         if (dto.getLocation() != null) {
-            event.setLat(dto.getLocation().getLat());
-            event.setLon(dto.getLocation().getLon());
+            event.setLocation(dto.getLocation());
         }
         if (dto.getEventDate() != null) {
             LocalDateTime newDate = DateTimeUtil.parse(dto.getEventDate());
@@ -123,11 +122,11 @@ public class EventServiceImpl implements EventService {
         if (dto.getStateAction() != null) {
             switch (dto.getStateAction()) {
                 case SEND_TO_REVIEW:
-                    event.setState(Event.State.PENDING);
+                    event.setState(State.PENDING);
                     break;
 
                 case CANCEL_REVIEW:
-                    event.setState(Event.State.CANCELED);
+                    event.setState(State.CANCELED);
                     break;
 
                 default:

@@ -1,15 +1,6 @@
 package ru.practicum.ewm.server.event.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import ru.practicum.ewm.server.category.model.Category;
@@ -50,11 +41,8 @@ public class Event {
     @Column(nullable = false)
     private Boolean requestModeration = true;
 
-    @Column(nullable = false)
-    private Float lat;
-
-    @Column(nullable = false)
-    private Float lon;
+    @Embedded
+    private Location location;
 
     @Column(nullable = false)
     private LocalDateTime eventDate;
@@ -70,10 +58,4 @@ public class Event {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private State state = State.PENDING;
-
-    public enum State {
-        PENDING,
-        PUBLISHED,
-        CANCELED
-    }
 }

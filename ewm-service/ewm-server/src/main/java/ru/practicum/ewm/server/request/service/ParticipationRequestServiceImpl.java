@@ -8,6 +8,7 @@ import ru.practicum.ewm.server.error.exception.ConditionNotMetException;
 import ru.practicum.ewm.server.error.exception.ConflictException;
 import ru.practicum.ewm.server.error.exception.NotFoundException;
 import ru.practicum.ewm.server.event.model.Event;
+import ru.practicum.ewm.server.event.model.State;
 import ru.practicum.ewm.server.event.repository.EventRepository;
 import ru.practicum.ewm.server.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.server.request.dto.EventRequestStatusUpdateResult;
@@ -59,7 +60,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             throw new ConditionNotMetException("The initiator cannot request participation in their own event");
         }
 
-        if (event.getState() != Event.State.PUBLISHED) {
+        if (event.getState() != State.PUBLISHED) {
             throw new ConditionNotMetException("Event must be published");
         }
 
