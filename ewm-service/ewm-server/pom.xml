@@ -5,17 +5,12 @@
 
     <parent>
         <groupId>ru.practicum</groupId>
-        <artifactId>stats</artifactId>
+        <artifactId>ewm-service</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>stats-server</artifactId>
-    <name>stats-server</name>
-
-    <properties>
-        <java.version>21</java.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <artifactId>ewm-server</artifactId>
+    <name>ewm-server</name>
 
     <dependencies>
         <dependency>
@@ -30,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>ru.practicum</groupId>
-            <artifactId>stats-dto</artifactId>
+            <artifactId>stats-client</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -65,9 +60,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>ru.practicum.stats.server.StatsServerApplication</mainClass>
-                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -25,7 +25,36 @@ services:
       stats-db:
         condition: service_healthy
 
+  ewm-db:
+    image: postgres:16
+    container_name: ewm-db
+    environment:
+      POSTGRES_DB: ewm
+      POSTGRES_USER: ewm
+      POSTGRES_PASSWORD: ewm
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   ewm-service:
-    image: eclipse-temurin:21-jre
+    build:
+      context: .
+      dockerfile: ewm-service/ewm-server/Dockerfile
     container_name: ewm-service
-    command: [ "sh", "-c", "echo 'ewm-service stub' && sleep infinity" ]
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      stats-server:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
+      SPRING_DATASOURCE_USERNAME: ewm
+      SPRING_DATASOURCE_PASSWORD: ewm
+      STATS_SERVER_URL: http://stats-server:9090
+      STATS_APP_NAME: ewm-main-service

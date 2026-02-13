@@ -11,4 +11,8 @@
 
     <artifactId>ewm-service</artifactId>
     <packaging>pom</packaging>
+
+    <modules>
+        <module>ewm-server</module>
+    </modules>
 </project>
