@@ -1,7 +1,6 @@
 package ru.practicum.ewm.server.category.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.server.category.dto.CategoryDto;
