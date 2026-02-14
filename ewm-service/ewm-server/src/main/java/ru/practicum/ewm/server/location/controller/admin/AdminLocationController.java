@@ -1,4 +1,4 @@
-package ru.practicum.ewm.server.location.controller;
+package ru.practicum.ewm.server.location.controller.admin;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;

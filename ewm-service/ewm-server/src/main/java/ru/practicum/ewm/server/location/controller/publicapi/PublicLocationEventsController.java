@@ -1,4 +1,4 @@
-package ru.practicum.ewm.server.location.controller;
+package ru.practicum.ewm.server.location.controller.publicapi;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
@@ -21,21 +21,20 @@ import java.util.Map;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin/locations")
-public class AdminLocationEventsController {
+@RequestMapping("/locations")
+public class PublicLocationEventsController {
 
     private final AdminLocationService locationService;
     private final EventRepository eventRepository;
     private final EventMetricsService metricsService;
 
     @GetMapping("/{locationId}/events")
-    public List<EventShortDto> getEvents(@PathVariable long locationId,
-                                         @RequestParam(defaultValue = "0") @Min(0) int from,
-                                         @RequestParam(defaultValue = "10") @Positive int size) {
+    public List<EventShortDto> getEventsInLocation(@PathVariable @Positive long locationId,
+                                                   @RequestParam(defaultValue = "0") @Min(0) int from,
+                                                   @RequestParam(defaultValue = "10") @Positive int size) {
 
         LocationArea loc = locationService.getOrThrow(locationId);
 
-        // сортировку можно убрать, если начнутся проблемы с native + pageable
         var page = new OffsetBasedPageRequest(from, size, Sort.by("eventDate").ascending());
 
         List<Event> events = eventRepository
