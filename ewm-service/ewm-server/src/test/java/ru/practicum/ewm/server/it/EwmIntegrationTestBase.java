@@ -2,12 +2,14 @@ package ru.practicum.ewm.server.it;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import ru.practicum.ewm.server.it.support.FakeStatsServer;
 
 import java.io.IOException;
 
+@ActiveProfiles("test")
 public abstract class EwmIntegrationTestBase {
 
     protected static final FakeStatsServer FAKE_STATS_SERVER = new FakeStatsServer();
