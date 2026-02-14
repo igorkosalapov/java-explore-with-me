@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
                     .map(UserMapper::toDto)
                     .toList();
         }
-        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size, Sort.by("id").ascending());
+        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size);
         return userRepository.findAll(pageRequest)
                 .stream()
                 .map(UserMapper::toDto)

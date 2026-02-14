@@ -79,7 +79,7 @@ public class PublicEventServiceImpl implements PublicEventService {
             return mapSortAndSliceByViews(events, from, size);
         }
 
-        OffsetBasedPageRequest page = new OffsetBasedPageRequest(from, size, Sort.by("eventDate").ascending());
+        OffsetBasedPageRequest page = new OffsetBasedPageRequest(from, size);
         List<Event> events = eventRepository.findAll(spec, page).getContent();
         return mapToShortDtos(events);
     }

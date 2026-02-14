@@ -25,9 +25,11 @@ public class DbFunctionsInitializer {
                         ") " +
                         "RETURNS double precision AS $$ " +
                         "SELECT 6371000 * acos(" +
-                        "    cos(radians(lat1)) * cos(radians(lat2)) * " +
-                        "    cos(radians(lon2) - radians(lon1)) + " +
-                        "    sin(radians(lat1)) * sin(radians(lat2))" +
+                        "    LEAST(1.0, GREATEST(-1.0, " +
+                        "        cos(radians(lat1)) * cos(radians(lat2)) * " +
+                        "        cos(radians(lon2) - radians(lon1)) + " +
+                        "        sin(radians(lat1)) * sin(radians(lat2))" +
+                        "    ))" +
                         "); " +
                         "$$ LANGUAGE sql IMMUTABLE;"
         );

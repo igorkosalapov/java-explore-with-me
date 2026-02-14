@@ -37,7 +37,7 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getUserEvents(long userId, int from, int size) {
         getUserOrThrow(userId);
 
-        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size, Sort.by("id").ascending());
+        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size);
         return eventRepository.findByInitiatorId(userId, pageRequest)
                 .stream()
                 .map(EventMapper::toShortDto)

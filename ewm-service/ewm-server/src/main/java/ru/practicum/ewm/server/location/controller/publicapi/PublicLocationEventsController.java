@@ -35,15 +35,21 @@ public class PublicLocationEventsController {
 
         LocationArea loc = locationService.getOrThrow(locationId);
 
-        var page = new OffsetBasedPageRequest(from, size, Sort.by("eventDate").ascending());
+        OffsetBasedPageRequest page =
+                new OffsetBasedPageRequest(from, size);
 
         List<Event> events = eventRepository
                 .findPublishedInRadius(loc.getLat(), loc.getLon(), loc.getRadiusM(), page)
                 .getContent();
 
-        if (events.isEmpty()) return List.of();
+        if (events.isEmpty()) {
+            return List.of();
+        }
 
-        List<Long> ids = events.stream().map(Event::getId).toList();
+        List<Long> ids = events.stream()
+                .map(Event::getId)
+                .toList();
+
         Map<Long, Long> confirmed = metricsService.confirmedByEventIds(ids);
         Map<String, Long> views = metricsService.viewsByEventIds(ids);
 

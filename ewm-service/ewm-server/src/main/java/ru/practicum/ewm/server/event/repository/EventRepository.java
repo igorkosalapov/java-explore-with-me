@@ -19,17 +19,22 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
     Optional<Event> findByIdAndInitiatorId(Long id, Long initiatorId);
 
     @Query(value = """
-            SELECT *
-            FROM events e
-            WHERE e.state = 'PUBLISHED'
-              AND distance_m(e.location_lat, e.location_lon, :centerLat, :centerLon) <= :radiusM
-            """,
+        SELECT *
+        FROM events e
+        WHERE e.state = 'PUBLISHED'
+          AND e.lat IS NOT NULL
+          AND e.lon IS NOT NULL
+          AND distance_m(:centerLat, :centerLon, e.lat, e.lon) <= :radiusM
+        ORDER BY e.event_date ASC
+        """,
             countQuery = """
-                    SELECT count(*)
-                    FROM events e
-                    WHERE e.state = 'PUBLISHED'
-                      AND distance_m(e.location_lat, e.location_lon, :centerLat, :centerLon) <= :radiusM
-                    """,
+                SELECT count(*)
+                FROM events e
+                WHERE e.state = 'PUBLISHED'
+                  AND e.lat IS NOT NULL
+                  AND e.lon IS NOT NULL
+                  AND distance_m(:centerLat, :centerLon, e.lat, e.lon) <= :radiusM
+                """,
             nativeQuery = true)
     Page<Event> findPublishedInRadius(@Param("centerLat") double centerLat,
                                       @Param("centerLon") double centerLon,

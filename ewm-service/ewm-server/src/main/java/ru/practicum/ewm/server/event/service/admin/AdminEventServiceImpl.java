@@ -57,7 +57,7 @@ public class AdminEventServiceImpl implements AdminEventService {
                 .and(EventSpecifications.eventDateAfter(start))
                 .and(EventSpecifications.eventDateBefore(end));
 
-        OffsetBasedPageRequest page = new OffsetBasedPageRequest(from, size, Sort.by("id").ascending());
+        OffsetBasedPageRequest page = new OffsetBasedPageRequest(from, size);
         List<Event> events = eventRepository.findAll(spec, page).getContent();
 
         return mapToFullDtos(events);

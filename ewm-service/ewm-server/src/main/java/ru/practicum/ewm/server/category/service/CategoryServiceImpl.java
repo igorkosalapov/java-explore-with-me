@@ -66,7 +66,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> getAll(int from, int size) {
-        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size, Sort.by("id").ascending());
+        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size);
         return categoryRepository.findAll(pageRequest)
                 .stream()
                 .map(CategoryMapper::toDto)

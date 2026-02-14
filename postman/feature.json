@@ -1,0 +1,229 @@
+{
+  "info": {
+    "name": "ExploreWithMe — Этап 3: location_processing",
+    "_postman_id": "feature-location-processing-with-validation",
+    "description": "Коллекция проверяет создание локаций, получение списка, поиск событий и валидацию данных.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Негативный тест — некорректная широта (ожидаем 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Некорректная локация\",\n  \"lat\": 200,\n  \"lon\": 37.61,\n  \"radiusM\": 1000\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/locations",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "locations"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"400 Bad Request\", function () {",
+              "  pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Создать локацию — Театр",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Театр (тест)\",\n  \"lat\": 55.7600,\n  \"lon\": 37.6180,\n  \"radiusM\": 800\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/locations",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "locations"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"201 Created\", function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.environment.set('locationId1', json.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Создать локацию — Парк",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Парк (тест)\",\n  \"lat\": 55.7400,\n  \"lon\": 37.6000,\n  \"radiusM\": 1500\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/locations",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "locations"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"201 Created\", function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.environment.set('locationId2', json.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Создать локацию — Стадион",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Стадион (тест)\",\n  \"lat\": 55.8000,\n  \"lon\": 37.5500,\n  \"radiusM\": 1200\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/locations",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "locations"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"201 Created\", function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.environment.set('locationId3', json.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Получить список локаций (публичный API)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/locations?from=0&size=50",
+          "host": ["{{baseUrl}}"],
+          "path": ["locations"],
+          "query": [
+            { "key": "from", "value": "0" },
+            { "key": "size", "value": "50" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test(\"Ответ — массив\", function () {",
+              "  pm.expect(json).to.be.an('array');",
+              "});",
+              "pm.test(\"В списке есть созданные локации\", function () {",
+              "  const names = json.map(x => x.name);",
+              "  pm.expect(names).to.include('Театр (тест)');",
+              "  pm.expect(names).to.include('Парк (тест)');",
+              "  pm.expect(names).to.include('Стадион (тест)');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Получить события в первой локации",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/locations/{{locationId1}}/events?from=0&size=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["locations", "{{locationId1}}", "events"],
+          "query": [
+            { "key": "from", "value": "0" },
+            { "key": "size", "value": "10" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Негативный тест — несуществующая локация",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/locations/999999999/events",
+          "host": ["{{baseUrl}}"],
+          "path": ["locations", "999999999", "events"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"404 Not Found\", function () {",
+              "  pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "locationId1", "value": "" },
+    { "key": "locationId2", "value": "" },
+    { "key": "locationId3", "value": "" }
+  ]
+}

@@ -15,8 +15,8 @@ public class NewLocationDto {
     private Float lat;
 
     @NotNull
-    @DecimalMin(value = "-90.0", inclusive = true)
-    @DecimalMax(value = "90.0", inclusive = true)
+    @DecimalMin(value = "-180.0", inclusive = true)
+    @DecimalMax(value = "180.0", inclusive = true)
     private Float lon;
 
     @NotNull
