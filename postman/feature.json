@@ -1,229 +1,499 @@
 {
   "info": {
     "name": "ExploreWithMe — Этап 3: location_processing",
-    "_postman_id": "feature-location-processing-with-validation",
-    "description": "Коллекция проверяет создание локаций, получение списка, поиск событий и валидацию данных.",
+    "_postman_id": "a31eb0a5-077c-4aaf-a3e9-4cc273cc9879",
+    "description": " ",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
   "item": [
     {
-      "name": "Негативный тест — некорректная широта (ожидаем 400)",
+      "name": "0) Негативный тест — некорректная широта при создании локации (POST /admin/locations) -> 400",
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/locations",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "locations"
+          ]
+        },
         "body": {
           "mode": "raw",
           "raw": "{\n  \"name\": \"Некорректная локация\",\n  \"lat\": 200,\n  \"lon\": 37.61,\n  \"radiusM\": 1000\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/admin/locations",
-          "host": ["{{baseUrl}}"],
-          "path": ["admin", "locations"]
         }
       },
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test(\"400 Bad Request\", function () {",
-              "  pm.response.to.have.status(400);",
-              "});"
+              "pm.test('400 Bad Request', () => pm.response.to.have.status(400));"
             ]
           }
         }
       ]
     },
     {
-      "name": "Создать локацию — Театр",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Театр (тест)\",\n  \"lat\": 55.7600,\n  \"lon\": 37.6180,\n  \"radiusM\": 800\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/admin/locations",
-          "host": ["{{baseUrl}}"],
-          "path": ["admin", "locations"]
-        }
-      },
-      "event": [
+      "name": "1) Сценарий: создание локации и проверка списка",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"201 Created\", function () {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "const json = pm.response.json();",
-              "pm.environment.set('locationId1', json.id);"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Создать локацию — Парк",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Парк (тест)\",\n  \"lat\": 55.7400,\n  \"lon\": 37.6000,\n  \"radiusM\": 1500\n}"
+          "name": "1.1 Создать локацию (POST /admin/locations) -> 201 + сохранить locationName",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/locations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "locations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Локация для списка {{$timestamp}}\",\n  \"lat\": 55.75,\n  \"lon\": 37.61,\n  \"radiusM\": 1200\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('listLocationName', String(json.name));"
+                ]
+              }
+            }
+          ]
         },
-        "url": {
-          "raw": "{{baseUrl}}/admin/locations",
-          "host": ["{{baseUrl}}"],
-          "path": ["admin", "locations"]
-        }
-      },
-      "event": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"201 Created\", function () {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "const json = pm.response.json();",
-              "pm.environment.set('locationId2', json.id);"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Создать локацию — Стадион",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Стадион (тест)\",\n  \"lat\": 55.8000,\n  \"lon\": 37.5500,\n  \"radiusM\": 1200\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/admin/locations",
-          "host": ["{{baseUrl}}"],
-          "path": ["admin", "locations"]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"201 Created\", function () {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "const json = pm.response.json();",
-              "pm.environment.set('locationId3', json.id);"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Получить список локаций (публичный API)",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/locations?from=0&size=50",
-          "host": ["{{baseUrl}}"],
-          "path": ["locations"],
-          "query": [
-            { "key": "from", "value": "0" },
-            { "key": "size", "value": "50" }
+          "name": "1.2 Получить список локаций (GET /locations) -> 200 + проверить наличие созданной",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/locations?from=0&size=200",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "200"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Ответ — массив', () => pm.expect(body).to.be.an('array'));",
+                  "pm.test('В списке есть созданная локация', () => {",
+                  "  const expected = pm.collectionVariables.get('listLocationName');",
+                  "  pm.expect(expected, 'listLocationName должен быть сохранён на шаге 1.1').to.be.ok;",
+                  "  const names = body.map(x => x.name);",
+                  "  pm.expect(names).to.include(expected);",
+                  "});"
+                ]
+              }
+            }
           ]
         }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"200 OK\", function () {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "const json = pm.response.json();",
-              "pm.test(\"Ответ — массив\", function () {",
-              "  pm.expect(json).to.be.an('array');",
-              "});",
-              "pm.test(\"В списке есть созданные локации\", function () {",
-              "  const names = json.map(x => x.name);",
-              "  pm.expect(names).to.include('Театр (тест)');",
-              "  pm.expect(names).to.include('Парк (тест)');",
-              "  pm.expect(names).to.include('Стадион (тест)');",
-              "});"
-            ]
-          }
-        }
       ]
     },
     {
-      "name": "Получить события в первой локации",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/locations/{{locationId1}}/events?from=0&size=10",
-          "host": ["{{baseUrl}}"],
-          "path": ["locations", "{{locationId1}}", "events"],
-          "query": [
-            { "key": "from", "value": "0" },
-            { "key": "size", "value": "10" }
+      "name": "2) Сценарий: поиск событий в локации и проверка результата",
+      "item": [
+        {
+          "name": "2.1 Создать пользователя (POST /admin/users) -> 201 + сохранить userId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user_{{$timestamp}}@test.ru\",\n  \"name\": \"User {{$timestamp}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('userId', String(json.id));"
+                ]
+              }
+            }
           ]
-        }
-      },
-      "event": [
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"200 OK\", function () {",
-              "  pm.response.to.have.status(200);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Негативный тест — несуществующая локация",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/locations/999999999/events",
-          "host": ["{{baseUrl}}"],
-          "path": ["locations", "999999999", "events"]
-        }
-      },
-      "event": [
+          "name": "2.2 Создать категорию (POST /admin/categories) -> 201 + сохранить categoryId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Категория {{$timestamp}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('categoryId', String(json.id));"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"404 Not Found\", function () {",
-              "  pm.response.to.have.status(404);",
-              "});"
-            ]
-          }
+          "name": "2.3 Создать событие (POST /users/{userId}/events) -> 201 + сохранить eventId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annotation\": \"Аннотация тестового события {{$timestamp}} (длина больше 20 символов)\",\n  \"category\": {{categoryId}},\n  \"description\": \"Описание тестового события {{$timestamp}} (длина больше 20 символов, чтобы пройти валидацию).\",\n  \"eventDate\": \"2030-01-01 12:00:00\",\n  \"location\": { \"lat\": 55.75, \"lon\": 37.61 },\n  \"paid\": false,\n  \"participantLimit\": 0,\n  \"requestModeration\": true,\n  \"title\": \"Тест-событие {{$timestamp}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('eventId', String(json.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.4 Опубликовать событие (PATCH /admin/events/{eventId}) -> 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "events",
+                "{{eventId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stateAction\": \"PUBLISH_EVENT\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.5 Создать локацию для поиска (POST /admin/locations) -> 201 + сохранить searchLocationId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/locations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "locations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Локация для поиска {{$timestamp}}\",\n  \"lat\": 55.75,\n  \"lon\": 37.61,\n  \"radiusM\": 5000\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('searchLocationId', String(json.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.6 Поиск событий в локации (GET /locations/{id}/events) -> 200 + проверить eventId",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/locations/{{searchLocationId}}/events?from=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "{{searchLocationId}}",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Ответ — массив', () => pm.expect(body).to.be.an('array'));",
+                  "pm.test('Массив не пустой', () => pm.expect(body.length).to.be.above(0));",
+                  "pm.test('В ответе есть созданное событие', () => {",
+                  "  const expected = parseInt(pm.collectionVariables.get('eventId'), 10);",
+                  "  const ids = body.map(e => e.id);",
+                  "  pm.expect(ids).to.include(expected);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.7 Негативный: несуществующая локация при поиске (GET) -> 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/locations/999999999/events?from=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "999999999",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
-  ],
-  "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "locationId1", "value": "" },
-    { "key": "locationId2", "value": "" },
-    { "key": "locationId3", "value": "" }
   ]
 }
