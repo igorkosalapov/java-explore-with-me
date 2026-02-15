@@ -13,6 +13,8 @@ import ru.practicum.ewm.server.location.service.AdminLocationService;
 
 import java.util.List;
 
+import ru.practicum.ewm.server.location.dto.UpdateLocationDto;
+
 @Validated
 @RestController
 @RequiredArgsConstructor
@@ -29,7 +31,15 @@ public class AdminLocationController {
 
     @GetMapping
     public List<LocationDto> getAll(@RequestParam(defaultValue = "0") @Min(0) int from,
-                                   @RequestParam(defaultValue = "10") @Positive int size) {
+                                    @RequestParam(defaultValue = "10") @Positive int size) {
         return service.getAll(from, size);
     }
+
+
+    @PatchMapping("/{locationId}")
+    public LocationDto update(@PathVariable @Positive long locationId,
+                              @Valid @RequestBody UpdateLocationDto dto) {
+        return service.update(locationId, dto);
+    }
+
 }
