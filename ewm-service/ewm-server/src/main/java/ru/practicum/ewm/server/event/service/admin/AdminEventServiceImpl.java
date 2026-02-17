@@ -1,7 +1,6 @@
 package ru.practicum.ewm.server.event.service.admin;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +56,7 @@ public class AdminEventServiceImpl implements AdminEventService {
                 .and(EventSpecifications.eventDateAfter(start))
                 .and(EventSpecifications.eventDateBefore(end));
 
-        OffsetBasedPageRequest page = new OffsetBasedPageRequest(from, size, Sort.by("id").ascending());
+        OffsetBasedPageRequest page = new OffsetBasedPageRequest(from, size);
         List<Event> events = eventRepository.findAll(spec, page).getContent();
 
         return mapToFullDtos(events);

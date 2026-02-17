@@ -1,0 +1,490 @@
+{
+  "info": {
+    "name": "ExploreWithMe — Этап 3: location_processing",
+    "_postman_id": "a31eb0a5-077c-4aaf-a3e9-4cc273cc9879",
+    "description": " ",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "0) Негативный тест — некорректная широта при создании локации (POST /admin/locations) -> 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/locations",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "locations"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Некорректная локация\",\n  \"lat\": 200,\n  \"lon\": 37.61,\n  \"radiusM\": 1000\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 Bad Request', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "1) Позитивный тест — создание локации (POST /admin/locations) -> 201 + проверить тело ответа",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/locations",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "locations"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Позитивная локация {{$timestamp}}\",\n  \"lat\": 55.75,\n  \"lon\": 37.61,\n  \"radiusM\": 1500\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.test('Ответ — объект', () => pm.expect(json).to.be.an('object'));",
+              "pm.test('Есть id', () => pm.expect(json).to.have.property('id'));",
+              "pm.test('Есть name', () => pm.expect(json).to.have.property('name'));",
+              "pm.test('name совпадает с отправленным', () => {",
+              "  const rawBody = pm.request.body && pm.request.body.raw ? pm.variables.replaceIn(pm.request.body.raw) : null;",
+              "  pm.expect(rawBody, 'Не удалось прочитать тело запроса').to.be.ok;",
+              "  const sentName = JSON.parse(rawBody).name;",
+              "  pm.expect(sentName, 'Не удалось прочитать name из тела запроса').to.be.ok;",
+              "  pm.expect(json.name).to.eql(sentName);",
+              "});",
+              "pm.collectionVariables.set('createdLocationId', String(json.id));",
+              "pm.collectionVariables.set('createdLocationName', String(json.name));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2) Получить список локаций (GET /locations) -> 200 + проверить наличие созданной (изолировано через pre-request)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/locations?from=0&size=200",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "locations"
+          ],
+          "query": [
+            {
+              "key": "from",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "200"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Setup (pre-request): создаём локацию, чтобы /locations можно было проверить независимо",
+              "(function(){",
+              "  const baseUrl = pm.variables.get('baseUrl');",
+              "  if (!baseUrl) { throw new Error('baseUrl не задан (ни в окружении, ни в переменных коллекции)'); }",
+              "",
+              "  const locationName = `Локация для списка ${Date.now()}`;",
+              "  pm.variables.set('listLocationName', locationName);",
+              "",
+              "  pm.sendRequest({",
+              "    url: `${baseUrl}/admin/locations`,",
+              "    method: 'POST',",
+              "    header: {",
+              "      'Accept': 'application/json',",
+              "      'Content-Type': 'application/json'",
+              "    },",
+              "    body: {",
+              "      mode: 'raw',",
+              "      raw: JSON.stringify({",
+              "        name: locationName,",
+              "        lat: 55.75,",
+              "        lon: 37.61,",
+              "        radiusM: 1200",
+              "      })",
+              "    }",
+              "  }, (err, res) => {",
+              "    if (err) { throw err; }",
+              "    if (!res || res.code !== 201) {",
+              "      const code = res ? res.code : 'no response';",
+              "      const body = res ? res.text() : '';",
+              "      throw new Error(`Setup failed: POST /admin/locations ожидал 201, получил ${code}. Body: ${body}`);",
+              "    }",
+              "    const json = res.json();",
+              "    pm.variables.set('listLocationId', String(json.id));",
+              "  });",
+              "})();"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Ответ — массив', () => pm.expect(body).to.be.an('array'));",
+              "",
+              "pm.test('В списке есть созданная локация', function(done) {",
+              "  const baseUrl = pm.variables.get('baseUrl');",
+              "  const expectedId = pm.variables.get('listLocationId');",
+              "  const expectedName = pm.variables.get('listLocationName');",
+              "  pm.expect(baseUrl, 'baseUrl должен быть задан').to.be.ok;",
+              "  pm.expect(expectedId, 'listLocationId должен быть установлен в pre-request').to.be.ok;",
+              "  pm.expect(expectedName, 'listLocationName должен быть установлен в pre-request').to.be.ok;",
+              "",
+              "  const pageSize = 200;",
+              "  const maxPages = 10; // максимум 2000 элементов",
+              "",
+              "  const contains = (arr) => {",
+              "    const ids = arr.map(x => String(x.id));",
+              "    if (!ids.includes(String(expectedId))) return false;",
+              "    const created = arr.find(x => String(x.id) === String(expectedId));",
+              "    pm.expect(created, 'Созданная локация должна присутствовать в ответе').to.be.ok;",
+              "    pm.expect(created.name).to.eql(expectedName);",
+              "    return true;",
+              "  };",
+              "",
+              "  // 1) Проверяем текущую страницу (тот самый ответ, который тестируем)",
+              "  if (contains(body)) return done();",
+              "",
+              "  // 2) Если не нашли — пролистываем следующие страницы",
+              "  let from = pageSize;",
+              "  let page = 2;",
+              "",
+              "  const next = () => {",
+              "    if (page > maxPages) {",
+              "      pm.expect.fail(`Не нашли созданную локацию id=${expectedId} в первых ${maxPages} страницах (/locations, size=${pageSize}). ` +",
+              "        `Возможные причины: сортировка по возрастанию + очень много данных в БД, либо pre-request не успел создать локацию.`);",
+              "      return done();",
+              "    }",
+              "",
+              "    pm.sendRequest({",
+              "      url: `${baseUrl}/locations?from=${from}&size=${pageSize}`,",
+              "      method: 'GET',",
+              "      header: { 'Accept': 'application/json' }",
+              "    }, (err, res) => {",
+              "      pm.expect(err, 'Ошибка запроса страницы /locations').to.equal(null);",
+              "      pm.expect(res.code, 'Страница /locations должна возвращать 200').to.equal(200);",
+              "      const arr = res.json();",
+              "      pm.expect(arr, 'Тело страницы /locations должно быть массивом').to.be.an('array');",
+              "      if (contains(arr)) return done();",
+              "      if (arr.length < pageSize) {",
+              "        pm.expect.fail(`Дошли до конца списка (страница ${page}, элементов меньше ${pageSize}), но локация id=${expectedId} не найдена.`);",
+              "        return done();",
+              "      }",
+              "      from += pageSize;",
+              "      page += 1;",
+              "      next();",
+              "    });",
+              "  };",
+              "",
+              "  next();",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3) Поиск событий в локации (GET /locations/{id}/events) -> 200 + проверить наличие события (изолировано через pre-request)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/locations/{{eventsLocationId}}/events?from=0&size=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "locations",
+            "{{eventsLocationId}}",
+            "events"
+          ],
+          "query": [
+            {
+              "key": "from",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "(function(){",
+              "  const baseUrl = pm.variables.get('baseUrl');",
+              "  if (!baseUrl) { throw new Error('baseUrl не задан (ни в окружении, ни в переменных коллекции)'); }",
+              "",
+              "  const send = (req) => new Promise((resolve, reject) => {",
+              "    pm.sendRequest(req, (err, res) => err ? reject(err) : resolve(res));",
+              "  });",
+              "",
+              "  (async () => {",
+              "    const ts = Date.now();",
+              "",
+              "    const lat = 10 + Math.random();",
+              "    const lon = 20 + Math.random();",
+              "    pm.variables.set('eventsLat', String(lat));",
+              "    pm.variables.set('eventsLon', String(lon));",
+              "",
+              "    // 1) Создать локацию",
+              "    const locationName = `Локация для поиска ${ts}`;",
+              "    pm.variables.set('eventsLocationName', locationName);",
+              "",
+              "    let res = await send({",
+              "      url: `${baseUrl}/admin/locations`,",
+              "      method: 'POST',",
+              "      header: { 'Accept': 'application/json', 'Content-Type': 'application/json' },",
+              "      body: { mode: 'raw', raw: JSON.stringify({ name: locationName, lat: Number(lat), lon: Number(lon), radiusM: 200 }) }",
+              "    });",
+              "    if (res.code !== 201) { throw new Error(`Setup failed: POST /admin/locations ожидал 201, получил ${res.code}. Body: ${res.text()}`); }",
+              "    const locationId = String(res.json().id);",
+              "    pm.variables.set('eventsLocationId', locationId);",
+              "",
+              "    // 2) Создать пользователя",
+              "    res = await send({",
+              "      url: `${baseUrl}/admin/users`,",
+              "      method: 'POST',",
+              "      header: { 'Accept': 'application/json', 'Content-Type': 'application/json' },",
+              "      body: { mode: 'raw', raw: JSON.stringify({ email: `user_${ts}@test.ru`, name: `User ${ts}` }) }",
+              "    });",
+              "    if (res.code !== 201) { throw new Error(`Setup failed: POST /admin/users ожидал 201, получил ${res.code}. Body: ${res.text()}`); }",
+              "    const userId = String(res.json().id);",
+              "",
+              "    // 3) Создать категорию",
+              "    res = await send({",
+              "      url: `${baseUrl}/admin/categories`,",
+              "      method: 'POST',",
+              "      header: { 'Accept': 'application/json', 'Content-Type': 'application/json' },",
+              "      body: { mode: 'raw', raw: JSON.stringify({ name: `Категория ${ts}` }) }",
+              "    });",
+              "    if (res.code !== 201) { throw new Error(`Setup failed: POST /admin/categories ожидал 201, получил ${res.code}. Body: ${res.text()}`); }",
+              "    const categoryId = res.json().id;",
+              "",
+              "    // 4) Создать событие (координаты должны попадать в созданную локацию)",
+              "    res = await send({",
+              "      url: `${baseUrl}/users/${userId}/events`,",
+              "      method: 'POST',",
+              "      header: { 'Accept': 'application/json', 'Content-Type': 'application/json' },",
+              "      body: {",
+              "        mode: 'raw',",
+              "        raw: JSON.stringify({",
+              "          annotation: `Аннотация тестового события ${ts} (длина больше 20 символов)`,",
+              "          category: Number(categoryId),",
+              "          description: `Описание тестового события ${ts} (длина больше 20 символов, чтобы пройти валидацию).`,",
+              "          eventDate: '2030-01-01 12:00:00',",
+              "          location: { lat: Number(lat), lon: Number(lon) },",
+              "          paid: false,",
+              "          participantLimit: 0,",
+              "          requestModeration: true,",
+              "          title: `Тест-событие ${ts}`",
+              "        })",
+              "      }",
+              "    });",
+              "    if (res.code !== 201) { throw new Error(`Setup failed: POST /users/{userId}/events ожидал 201, получил ${res.code}. Body: ${res.text()}`); }",
+              "    const eventId = String(res.json().id);",
+              "    pm.variables.set('eventsEventId', eventId);",
+              "",
+              "    // 5) Опубликовать событие",
+              "    res = await send({",
+              "      url: `${baseUrl}/admin/events/${eventId}`,",
+              "      method: 'PATCH',",
+              "      header: { 'Accept': 'application/json', 'Content-Type': 'application/json' },",
+              "      body: { mode: 'raw', raw: JSON.stringify({ stateAction: 'PUBLISH_EVENT' }) }",
+              "    });",
+              "    if (res.code !== 200) { throw new Error(`Setup failed: PATCH /admin/events/{eventId} ожидал 200, получил ${res.code}. Body: ${res.text()}`); }",
+              "",
+              "  })().catch(e => { throw e; });",
+              "})();"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Ответ — массив', () => pm.expect(body).to.be.an('array'));",
+              "",
+              "pm.test('В ответе есть созданное событие', function(done){",
+              "  const baseUrl = pm.variables.get('baseUrl');",
+              "  const locationId = pm.variables.get('eventsLocationId');",
+              "  const expected = pm.variables.get('eventsEventId');",
+              "  pm.expect(baseUrl, 'baseUrl должен быть задан').to.be.ok;",
+              "  pm.expect(locationId, 'eventsLocationId должен быть установлен в pre-request').to.be.ok;",
+              "  pm.expect(expected, 'eventsEventId должен быть установлен в pre-request').to.be.ok;",
+              "",
+              "  const pageSize = 10;",
+              "  const maxPages = 10;",
+              "",
+              "  const contains = (arr) => {",
+              "    const ids = arr.map(e => String(e.id));",
+              "    return ids.includes(String(expected));",
+              "  };",
+              "",
+              "  if (contains(body)) return done();",
+              "",
+              "  let from = pageSize;",
+              "  let page = 2;",
+              "",
+              "  const next = () => {",
+              "    if (page > maxPages) {",
+              "      pm.expect.fail(`Не нашли событие id=${expected} в выдаче /locations/${locationId}/events за первые ${maxPages} страниц. ` +",
+              "        `Возможные причины: событие не попало в локацию (проверь координаты/радиус), событие не в PUBLISHED, ` +",
+              "        `или переменная eventsLocationId берётся не из того скоупа.`);",
+              "      return done();",
+              "    }",
+              "",
+              "    pm.sendRequest({",
+              "      url: `${baseUrl}/locations/${locationId}/events?from=${from}&size=${pageSize}`,",
+              "      method: 'GET',",
+              "      header: { 'Accept': 'application/json' }",
+              "    }, (err, res) => {",
+              "      pm.expect(err, 'Ошибка запроса страницы /locations/{id}/events').to.equal(null);",
+              "      pm.expect(res.code, 'Страница /locations/{id}/events должна возвращать 200').to.equal(200);",
+              "      const arr = res.json();",
+              "      pm.expect(arr, 'Тело /locations/{id}/events должно быть массивом').to.be.an('array');",
+              "      if (contains(arr)) return done();",
+              "      if (arr.length < pageSize) {",
+              "        pm.expect.fail(`Дошли до конца выдачи (страница ${page}), но событие id=${expected} не найдено.`);",
+              "        return done();",
+              "      }",
+              "      from += pageSize;",
+              "      page += 1;",
+              "      next();",
+              "    });",
+              "  };",
+              "",
+              "  next();",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4) Негативный тест — несуществующая локация при поиске событий (GET /locations/{id}/events) -> 404",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/locations/999999999/events?from=0&size=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "locations",
+            "999999999",
+            "events"
+          ],
+          "query": [
+            {
+              "key": "from",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

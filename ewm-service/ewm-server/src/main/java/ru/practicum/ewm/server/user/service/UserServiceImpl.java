@@ -1,7 +1,6 @@
 package ru.practicum.ewm.server.user.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.server.error.exception.ConflictException;
@@ -39,7 +38,7 @@ public class UserServiceImpl implements UserService {
                     .map(UserMapper::toDto)
                     .toList();
         }
-        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size, Sort.by("id").ascending());
+        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size);
         return userRepository.findAll(pageRequest)
                 .stream()
                 .map(UserMapper::toDto)

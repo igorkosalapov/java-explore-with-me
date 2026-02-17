@@ -1,7 +1,6 @@
 package ru.practicum.ewm.server.event.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.server.category.model.Category;
@@ -37,7 +36,7 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getUserEvents(long userId, int from, int size) {
         getUserOrThrow(userId);
 
-        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size, Sort.by("id").ascending());
+        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(from, size);
         return eventRepository.findByInitiatorId(userId, pageRequest)
                 .stream()
                 .map(EventMapper::toShortDto)
